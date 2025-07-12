@@ -37,4 +37,16 @@ async function criarUsuario(req, res) {
   }
 }
 
-module.exports = { criarUsuario };
+// Proteção de rota contra acesso sem token
+async function rotaRestrita(req, res) {
+  const usuario = req.usuario; // vindo do middleware
+  res.status(200).json({
+    mensagem: "Você acessou uma rota protegida!",
+    usuarioAutenticado: usuario,
+  });
+}
+
+module.exports = {
+  criarUsuario,
+  rotaRestrita,
+};

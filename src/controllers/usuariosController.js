@@ -107,8 +107,44 @@ async function editarUsuario(req, res) {
   }
 }
 
+// Rota DELETE para exclusão de usuários
+async function excluirUsuario(req, res) {
+  const { id } = req.params;
+  const usuarioAutenticado = req.usuario;
+
+  try {
+    // Verifica se o usuário existe e ainda não está excluído
+    const consulta = await pool.query(
+      "SELECT * FROM usuarios WHERE id = $1 AND excluido_em IS NULL",
+      [id]
+    );
+
+    if (consulta.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ erro: "Usuário não encontrado ou já excluído." });
+    }
+
+    await pool.query(
+      `UPDATE usuarios
+       SET excluido_em = NOW(),
+           excluido_por = $1
+       WHERE id = $2`,
+      [usuarioAutenticado.id, id]
+    );
+
+    res
+      .status(200)
+      .json({ mensagem: "Usuário excluído com sucesso (soft delete)." });
+  } catch (erro) {
+    console.error("Erro ao excluir usuário:", erro);
+    res.status(500).json({ erro: "Erro interno ao excluir usuário." });
+  }
+}
+
 module.exports = {
   criarUsuario,
   rotaRestrita,
   editarUsuario,
+  excluirUsuario,
 };

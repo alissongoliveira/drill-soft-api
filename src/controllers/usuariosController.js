@@ -46,7 +46,69 @@ async function rotaRestrita(req, res) {
   });
 }
 
+// Rota PUT para edição de usuários
+async function editarUsuario(req, res) {
+  const { id } = req.params;
+  const { nome, nome_usuario, cpf, categoria, senha, atualizado_por } =
+    req.body;
+
+  try {
+    // Verifica se usuário existe
+    const consulta = await pool.query(
+      "SELECT * FROM usuarios WHERE id = $1 AND excluido_em IS NULL",
+      [id]
+    );
+    if (consulta.rows.length === 0) {
+      return res.status(404).json({ erro: "Usuário não encontrado." });
+    }
+
+    let query;
+    let valores;
+
+    if (senha) {
+      const hash = await bcrypt.hash(senha, 10);
+      query = `
+        UPDATE usuarios
+        SET nome = $1,
+            nome_usuario = $2,
+            cpf = $3,
+            categoria = $4,
+            senha = $5,
+            atualizado_em = NOW(),
+            atualizado_por = $6
+        WHERE id = $7
+        RETURNING id, nome, nome_usuario, categoria;
+      `;
+      valores = [nome, nome_usuario, cpf, categoria, hash, atualizado_por, id];
+    } else {
+      query = `
+        UPDATE usuarios
+        SET nome = $1,
+            nome_usuario = $2,
+            cpf = $3,
+            categoria = $4,
+            atualizado_em = NOW(),
+            atualizado_por = $5
+        WHERE id = $6
+        RETURNING id, nome, nome_usuario, categoria;
+      `;
+      valores = [nome, nome_usuario, cpf, categoria, atualizado_por, id];
+    }
+
+    const resultado = await pool.query(query, valores);
+
+    res.status(200).json({
+      mensagem: "Usuário atualizado com sucesso.",
+      usuario: resultado.rows[0],
+    });
+  } catch (erro) {
+    console.error("Erro ao editar usuário:", erro);
+    res.status(500).json({ erro: "Erro interno ao atualizar usuário." });
+  }
+}
+
 module.exports = {
   criarUsuario,
   rotaRestrita,
+  editarUsuario,
 };

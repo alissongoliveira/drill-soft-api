@@ -6,6 +6,7 @@ const {
   rotaRestrita,
   editarUsuario,
   excluirUsuario,
+  listarUsuarios,
 } = require("../controllers/usuariosController");
 
 const autenticarToken = require("../middlewares/auth");
@@ -19,6 +20,7 @@ router.delete(
   autorizarAdminOuSupervisor,
   excluirUsuario
 );
+router.get("/", autenticarToken, listarUsuarios);
 
 router.get("/restrito", autenticarToken, rotaRestrita);
 

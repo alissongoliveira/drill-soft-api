@@ -142,9 +142,47 @@ async function excluirUsuario(req, res) {
   }
 }
 
+// Rota GET para listagem de usuários com paginação e filtro por categoria
+async function listarUsuarios(req, res) {
+  const { categoria, page = 1, limit = 10 } = req.query;
+
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const valores = [];
+  let filtro = "WHERE excluido_em IS NULL";
+
+  if (categoria) {
+    valores.push(categoria);
+    filtro += ` AND categoria = $${valores.length}`;
+  }
+
+  valores.push(limit, offset);
+
+  const query = `
+    SELECT id, nome, nome_usuario, cpf, categoria, criado_em
+    FROM usuarios
+    ${filtro}
+    ORDER BY id
+    LIMIT $${valores.length - 1} OFFSET $${valores.length}
+  `;
+
+  try {
+    const resultado = await pool.query(query, valores);
+    res.status(200).json({
+      pagina: parseInt(page),
+      limite: parseInt(limit),
+      total: resultado.rows.length,
+      usuarios: resultado.rows,
+    });
+  } catch (erro) {
+    console.error("Erro ao listar usuários:", erro);
+    res.status(500).json({ erro: "Erro ao buscar usuários." });
+  }
+}
+
 module.exports = {
   criarUsuario,
   rotaRestrita,
   editarUsuario,
   excluirUsuario,
+  listarUsuarios,
 };

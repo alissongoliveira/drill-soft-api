@@ -70,7 +70,55 @@ async function aceitarSolicitacao(req, res) {
   }
 }
 
+// Rota PUT para atualizar o status da solicitação para "finalizado"
+async function finalizarSolicitacao(req, res) {
+  const { id } = req.params;
+  const { peso_finalizado } = req.body;
+  const usuario = req.usuario;
+
+  if (!peso_finalizado || isNaN(peso_finalizado)) {
+    return res
+      .status(400)
+      .json({ erro: "Peso finalizado inválido ou ausente." });
+  }
+
+  try {
+    // Verifica se a solicitação existe e já foi aceita
+    const consulta = await pool.query(
+      "SELECT * FROM solicitacao_complemento WHERE id = $1 AND status = $2",
+      [id, "aceito"]
+    );
+
+    if (consulta.rows.length === 0) {
+      return res
+        .status(400)
+        .json({ erro: "Solicitação não encontrada ou ainda não aceita." });
+    }
+
+    const update = await pool.query(
+      `UPDATE solicitacao_complemento
+       SET status = 'finalizado',
+           peso_finalizado = $1,
+           data_finalizacao = NOW(),
+           hora_finalizacao = CURRENT_TIME,
+           finalizado_por = $2
+       WHERE id = $3
+       RETURNING *;`,
+      [peso_finalizado, usuario.id, id]
+    );
+
+    res.status(200).json({
+      mensagem: "Solicitação finalizada com sucesso.",
+      solicitacao: update.rows[0],
+    });
+  } catch (erro) {
+    console.error("Erro ao finalizar solicitação:", erro);
+    res.status(500).json({ erro: "Erro interno ao finalizar solicitação." });
+  }
+}
+
 module.exports = {
   criarSolicitacao,
   aceitarSolicitacao,
+  finalizarSolicitacao,
 };

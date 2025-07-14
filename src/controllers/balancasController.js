@@ -35,4 +35,40 @@ async function listarBalancas(req, res) {
   }
 }
 
-module.exports = { criarBalanca, listarBalancas };
+// Rota PUT para editar dados das balanças
+async function editarBalanca(req, res) {
+  const { id } = req.params;
+  const { nome, ip, porta } = req.body;
+
+  try {
+    const consulta = await pool.query("SELECT * FROM balancas WHERE id = $1", [
+      id,
+    ]);
+
+    if (consulta.rows.length === 0) {
+      return res.status(404).json({ erro: "Balança não encontrada." });
+    }
+
+    const atualizacao = await pool.query(
+      `UPDATE balancas
+       SET nome = $1, ip = $2, porta = $3
+       WHERE id = $4
+       RETURNING *`,
+      [nome, ip, porta, id]
+    );
+
+    res.status(200).json({
+      mensagem: "Balança atualizada com sucesso.",
+      balanca: atualizacao.rows[0],
+    });
+  } catch (erro) {
+    console.error("Erro ao editar balança:", erro);
+    res.status(500).json({ erro: "Erro ao editar balança." });
+  }
+}
+
+module.exports = {
+  criarBalanca,
+  listarBalancas,
+  editarBalanca,
+};

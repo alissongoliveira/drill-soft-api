@@ -156,9 +156,30 @@ async function recusarSolicitacao(req, res) {
   }
 }
 
+// Rota GET para listar solicitações com status "pendente"
+async function listarPendentes(req, res) {
+  try {
+    const resultado = await pool.query(`
+      SELECT *
+      FROM solicitacao_complemento
+      WHERE status = 'pendente'
+      ORDER BY data_solicitacao DESC, hora_solicitacao DESC
+    `);
+
+    res.status(200).json({
+      total: resultado.rows.length,
+      solicitacoes: resultado.rows,
+    });
+  } catch (erro) {
+    console.error("Erro ao listar solicitações pendentes:", erro);
+    res.status(500).json({ erro: "Erro ao buscar solicitações pendentes." });
+  }
+}
+
 module.exports = {
   criarSolicitacao,
   aceitarSolicitacao,
   finalizarSolicitacao,
   recusarSolicitacao,
+  listarPendentes,
 };

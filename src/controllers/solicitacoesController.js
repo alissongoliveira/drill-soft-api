@@ -117,8 +117,48 @@ async function finalizarSolicitacao(req, res) {
   }
 }
 
+// Rota PUT para atualizar o status da solicitação para "recusado"
+async function recusarSolicitacao(req, res) {
+  const { id } = req.params;
+  const usuario = req.usuario;
+
+  try {
+    // Verifica se a solicitação está pendente
+    const consulta = await pool.query(
+      "SELECT * FROM solicitacao_complemento WHERE id = $1 AND status = $2",
+      [id, "pendente"]
+    );
+
+    if (consulta.rows.length === 0) {
+      return res
+        .status(400)
+        .json({ erro: "Solicitação não encontrada ou já tratada." });
+    }
+
+    const update = await pool.query(
+      `UPDATE solicitacao_complemento
+       SET status = 'recusado',
+           data_rejeicao = NOW(),
+           hora_rejeicao = CURRENT_TIME,
+           rejeitado_por = $1
+       WHERE id = $2
+       RETURNING *;`,
+      [usuario.id, id]
+    );
+
+    res.status(200).json({
+      mensagem: "Solicitação recusada com sucesso.",
+      solicitacao: update.rows[0],
+    });
+  } catch (erro) {
+    console.error("Erro ao recusar solicitação:", erro);
+    res.status(500).json({ erro: "Erro interno ao recusar solicitação." });
+  }
+}
+
 module.exports = {
   criarSolicitacao,
   aceitarSolicitacao,
   finalizarSolicitacao,
+  recusarSolicitacao,
 };

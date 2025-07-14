@@ -30,6 +30,47 @@ async function criarSolicitacao(req, res) {
   }
 }
 
+// Rota PUT para alterar o status da solicitação para "aceito"
+async function aceitarSolicitacao(req, res) {
+  const { id } = req.params;
+  const usuario = req.usuario;
+
+  try {
+    // Verifica se existe e está pendente
+    const consulta = await pool.query(
+      "SELECT * FROM solicitacao_complemento WHERE id = $1 AND status = $2",
+      [id, "pendente"]
+    );
+
+    if (consulta.rows.length === 0) {
+      return res
+        .status(400)
+        .json({ erro: "Solicitação não encontrada ou já tratada." });
+    }
+
+    // Atualiza para aceito
+    const update = await pool.query(
+      `UPDATE solicitacao_complemento
+       SET status = 'aceito',
+           data_aceitacao = NOW(),
+           hora_aceitacao = CURRENT_TIME,
+           aceito_por = $1
+       WHERE id = $2
+       RETURNING *;`,
+      [usuario.id, id]
+    );
+
+    res.status(200).json({
+      mensagem: "Solicitação aceita com sucesso.",
+      solicitacao: update.rows[0],
+    });
+  } catch (erro) {
+    console.error("Erro ao aceitar solicitação:", erro);
+    res.status(500).json({ erro: "Erro interno ao aceitar solicitação." });
+  }
+}
+
 module.exports = {
   criarSolicitacao,
+  aceitarSolicitacao,
 };

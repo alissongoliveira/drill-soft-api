@@ -170,10 +170,46 @@ async function listarUsuarios(req, res) {
   }
 }
 
+// Rota PUT redefinição de senha de usuário por um usuário (administrador ou supervisor)
+async function redefinirSenha(req, res) {
+  const { id } = req.params;
+  const usuarioAutenticador = req.usuario;
+
+  try {
+    // Verifica se o usuário existe
+    const consulta = await pool.query(
+      "SELECT * FROM usuarios WHERE id = $1 AND excluido_em IS NULL",
+      [id]
+    );
+
+    if (consulta.rows.length === 0) {
+      return res.status(404).json({ erro: "Usuário não encontrado." });
+    }
+
+    await pool.query(
+      `UPDATE usuarios
+       SET senha = NULL,
+           atualizado_em = NOW(),
+           atualizado_por = $1
+       WHERE id = $2`,
+      [usuarioAutenticador.id, id]
+    );
+
+    res.status(200).json({
+      mensagem:
+        "Senha redefinida com sucesso. O usuário deverá definir uma nova senha ao fazer login.",
+    });
+  } catch (erro) {
+    console.error("Erro ao redefinir senha:", erro);
+    res.status(500).json({ erro: "Erro interno ao redefinir senha." });
+  }
+}
+
 module.exports = {
   criarUsuario,
   rotaRestrita,
   editarUsuario,
   excluirUsuario,
   listarUsuarios,
+  redefinirSenha,
 };

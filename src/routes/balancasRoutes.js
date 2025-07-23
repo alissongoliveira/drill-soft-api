@@ -6,6 +6,7 @@ const {
   criarBalanca,
   listarBalancas,
   editarBalanca,
+  buscarBalancaPorId,
 } = require("../controllers/balancasController");
 const autenticarToken = require("../middlewares/auth");
 const autorizarAdminOuSupervisor = require("../middlewares/autorizarAdminOuSupervisor");
@@ -13,6 +14,7 @@ const autorizarAdminOuSupervisor = require("../middlewares/autorizarAdminOuSuper
 // Rotas
 router.post("/", autenticarToken, autorizarAdminOuSupervisor, criarBalanca);
 router.get("/", autenticarToken, listarBalancas);
+router.get("/:id", autenticarToken, buscarBalancaPorId);
 router.put("/:id", autenticarToken, autorizarAdminOuSupervisor, editarBalanca);
 
 module.exports = router;

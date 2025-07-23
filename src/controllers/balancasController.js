@@ -67,8 +67,29 @@ async function editarBalanca(req, res) {
   }
 }
 
+// Rota GET para buscar dados de uma balança específica
+async function buscarBalancaPorId(req, res) {
+  const { id } = req.params;
+
+  try {
+    const resultado = await pool.query("SELECT * FROM balancas WHERE id = $1", [
+      id,
+    ]);
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ erro: "Balança não encontrada." });
+    }
+
+    res.status(200).json(resultado.rows[0]);
+  } catch (erro) {
+    console.error("Erro ao buscar balança:", erro);
+    res.status(500).json({ erro: "Erro ao buscar balança." });
+  }
+}
+
 module.exports = {
   criarBalanca,
   listarBalancas,
   editarBalanca,
+  buscarBalancaPorId,
 };

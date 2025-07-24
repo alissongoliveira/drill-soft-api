@@ -176,10 +176,30 @@ async function listarPendentes(req, res) {
   }
 }
 
+// Rota GET para listar todas as solicitações (independente do status)
+async function listarTodas(req, res) {
+  try {
+    const resultado = await pool.query(`
+      SELECT *
+      FROM solicitacao_complemento
+      ORDER BY data_solicitacao DESC, hora_solicitacao DESC
+    `);
+
+    res.status(200).json({
+      total: resultado.rows.length,
+      solicitacoes: resultado.rows,
+    });
+  } catch (erro) {
+    console.error("Erro ao listar todas as solicitações:", erro);
+    res.status(500).json({ erro: "Erro ao buscar todas as solicitações." });
+  }
+}
+
 module.exports = {
   criarSolicitacao,
   aceitarSolicitacao,
   finalizarSolicitacao,
   recusarSolicitacao,
   listarPendentes,
+  listarTodas,
 };

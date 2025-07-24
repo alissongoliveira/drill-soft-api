@@ -205,6 +205,26 @@ async function redefinirSenha(req, res) {
   }
 }
 
+// Rota GET para listar apenas operadores (sem paginação)
+async function listarOperadores(req, res) {
+  try {
+    const resultado = await pool.query(`
+      SELECT id, nome, nome_usuario, cpf, categoria
+      FROM usuarios
+      WHERE categoria = 'operador' AND excluido_em IS NULL
+      ORDER BY nome ASC
+    `);
+
+    res.status(200).json({
+      total: resultado.rows.length,
+      operadores: resultado.rows,
+    });
+  } catch (erro) {
+    console.error("Erro ao buscar operadores:", erro);
+    res.status(500).json({ erro: "Erro ao buscar operadores." });
+  }
+}
+
 module.exports = {
   criarUsuario,
   rotaRestrita,
@@ -212,4 +232,5 @@ module.exports = {
   excluirUsuario,
   listarUsuarios,
   redefinirSenha,
+  listarOperadores,
 };

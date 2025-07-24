@@ -9,6 +9,7 @@ const {
   excluirUsuario,
   listarUsuarios,
   redefinirSenha,
+  listarOperadores,
 } = require("../controllers/usuariosController");
 const autenticarToken = require("../middlewares/auth");
 const autorizarAdminOuSupervisor = require("../middlewares/autorizarAdminOuSupervisor");
@@ -30,5 +31,6 @@ router.put(
 );
 router.get("/", autenticarToken, listarUsuarios);
 router.get("/restrito", autenticarToken, rotaRestrita);
+router.get("/operadores", autenticarToken, listarOperadores);
 
 module.exports = router;

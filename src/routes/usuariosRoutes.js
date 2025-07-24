@@ -31,6 +31,6 @@ router.put(
 );
 router.get("/", autenticarToken, listarUsuarios);
 router.get("/restrito", autenticarToken, rotaRestrita);
-router.get("/operadores", autenticarToken, listarOperadores);
+router.get("/operadores", listarOperadores);
 
 module.exports = router;

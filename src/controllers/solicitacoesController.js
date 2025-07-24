@@ -176,13 +176,38 @@ async function listarPendentes(req, res) {
   }
 }
 
-// Rota GET para listar todas as solicitações (independente do status)
-async function listarTodas(req, res) {
+// Rota GET para listar todas as solicitações com JOINs
+async function listarTodasSolicitacoes(req, res) {
   try {
     const resultado = await pool.query(`
-      SELECT *
-      FROM solicitacao_complemento
-      ORDER BY data_solicitacao DESC, hora_solicitacao DESC
+      SELECT 
+        s.id,
+        s.placa,
+        s.status,
+        s.tara,
+        s.liquido,
+        s.peso_desejado,
+        s.peso_finalizado,
+        s.data_solicitacao,
+        s.hora_solicitacao,
+        s.data_aceitacao,
+        s.hora_aceitacao,
+        s.data_finalizacao,
+        s.hora_finalizacao,
+        s.data_rejeicao,
+        s.hora_rejeicao,
+        b.nome AS nome_balanca,
+        us.nome AS nome_solicitante,
+        uf.nome AS nome_finalizador,
+        ua.nome AS nome_aceitador,
+        ur.nome AS nome_rejeitador
+      FROM solicitacao_complemento s
+      LEFT JOIN balancas b ON b.id = s.balanca
+      LEFT JOIN usuarios us ON us.id = s.solicitado_por
+      LEFT JOIN usuarios uf ON uf.id = s.finalizado_por
+      LEFT JOIN usuarios ua ON ua.id = s.aceito_por
+      LEFT JOIN usuarios ur ON ur.id = s.rejeitado_por
+      ORDER BY s.data_solicitacao DESC, s.hora_solicitacao DESC
     `);
 
     res.status(200).json({
@@ -201,5 +226,5 @@ module.exports = {
   finalizarSolicitacao,
   recusarSolicitacao,
   listarPendentes,
-  listarTodas,
+  listarTodasSolicitacoes,
 };

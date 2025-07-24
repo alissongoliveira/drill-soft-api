@@ -7,7 +7,7 @@ const {
   finalizarSolicitacao,
   recusarSolicitacao,
   listarPendentes,
-  listarTodas,
+  listarTodasSolicitacoes,
 } = require("../controllers/solicitacoesController");
 // Valida de gerou token para o usuário logado
 const autenticarToken = require("../middlewares/auth");
@@ -34,6 +34,6 @@ router.put(
   recusarSolicitacao
 );
 router.get("/pendentes", autenticarToken, listarPendentes);
-router.get("/", autenticarToken, listarTodas);
+router.get("/todas", autenticarToken, listarTodasSolicitacoes);
 
 module.exports = router;

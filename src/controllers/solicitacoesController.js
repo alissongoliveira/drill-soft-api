@@ -160,10 +160,13 @@ async function recusarSolicitacao(req, res) {
 async function listarPendentes(req, res) {
   try {
     const resultado = await pool.query(`
-      SELECT *
-      FROM solicitacao_complemento
-      WHERE status = 'pendente'
-      ORDER BY data_solicitacao DESC, hora_solicitacao DESC
+      SELECT 
+        s.*,
+        b.nome AS nome_balanca
+      FROM solicitacao_complemento s
+      LEFT JOIN balancas b ON b.id = s.balanca
+      WHERE s.status = 'pendente'
+      ORDER BY s.data_solicitacao DESC, s.hora_solicitacao DESC
     `);
 
     res.status(200).json({
